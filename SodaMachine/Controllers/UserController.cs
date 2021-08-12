@@ -6,7 +6,7 @@ namespace SodaMachine.Controllers
     [Route("[controller]")]
     public class UserController : Controller
     {
-        public static int balance = 123;
+        public static int balance = 0;
 
         [HttpGet]
         public int Get()
@@ -14,11 +14,11 @@ namespace SodaMachine.Controllers
             return balance;
         }
 
-        //[HttpPost]
-        //public ActionResult Post(int amount)
-        //{
-        //    balance += amount;
-        //    return Ok();
-        //}
+        [HttpPost]
+        public ActionResult Post(int amount)
+        {
+            balance += amount;
+            return Ok();
+        }
     }
 }

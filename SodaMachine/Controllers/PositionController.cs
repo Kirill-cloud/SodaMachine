@@ -38,6 +38,7 @@ namespace SodaMachine.Controllers
 
                     db.SaveChanges();
                     UserController.balance -= x.Price;
+                    CashController.Total += x.Price;
                 }
             }
 
@@ -61,6 +62,20 @@ namespace SodaMachine.Controllers
                     p1.Count = position.Count;
                 }
                 db.SaveChanges();
+            }
+
+            return Ok();
+        }
+        [HttpPost]
+        public ActionResult RemovePosition([FromBody] Position position)
+        {
+            using (SodaContext db = new())
+            {
+                if (db.Positions.Find(position.Id) != null)
+                {
+                    db.Positions.Remove(db.Positions.Find(position.Id));
+                    db.SaveChanges();
+                }
             }
 
             return Ok();

@@ -9,7 +9,7 @@ export default class ButtonsSet extends Component {
   }
 
   async Mount() {
-    let responce = await fetch("./Cash");
+    let responce = await fetch("./Cash/Get");
     let data = await responce.json();
     this.setState({ cash: data });
   }

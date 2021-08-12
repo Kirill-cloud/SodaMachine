@@ -8,7 +8,7 @@ export class AdminPanel extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      forecasts: [],
+      positions: [],
       loading: true,
       balance: 0,
       cash: [0, 0, 0, 0],
@@ -19,13 +19,13 @@ export class AdminPanel extends Component {
   async Mount() {
     let responce = await fetch("./Position/Get");
     let data = await responce.json();
-    this.setState({ forecasts: data, loading: false });
+    this.setState({ positions: data, loading: false });
 
-    responce = await fetch("./User");
+    responce = await fetch("./Cash/GetTotal");
     data = await responce.json();
     this.setState({ balance: data });
 
-    responce = await fetch("./Cash");
+    responce = await fetch("./Cash/Get");
     data = await responce.json();
     this.setState({ cash: data });
   }
@@ -36,35 +36,37 @@ export class AdminPanel extends Component {
       body: JSON.stringify(position),
     };
     await fetch("./Position/AddPosition/", requestOptions);
-  }  
+  }
+  async RemovePosition(position) {
+    const requestOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(position),
+    };
+    await fetch("./Position/RemovePosition/", requestOptions);
+    this.Mount();
+  }
   async SaveCoins() {
     const requestOptions = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(this.state.cash),
     };
-    await fetch("./Cash/", requestOptions);
+    await fetch("./Cash/Post", requestOptions);
   }
   pusher() {
-    this.setState({
-      forecasts: [
-        ...this.state.forecasts.concat([
-          {
-            id: 0,
-            picture: "",
-            name: "",
-            count: 0,
-            price: 0,
-          },
-        ]),
-      ],
+    this.SavePosition({
+      id: 0,
+      picture: "",
+      name: "",
+      count: 0,
+      price: 0,
     });
-    let x = 0;
-    x++;
+    this.Mount();
   }
 
   updatePic(id, name, e) {
-    let x = this.state.forecasts;
+    let x = this.state.positions;
     x.forEach((el) => {
       if (el.id == id) {
         if (name == "pic") {
@@ -85,7 +87,7 @@ export class AdminPanel extends Component {
         }
       }
     });
-    this.setState({ forecasts: x });
+    this.setState({ positions: x });
   }
   toggle(index) {
     let x = this.state.cash;
@@ -108,42 +110,46 @@ export class AdminPanel extends Component {
         <table aria-labelledby="tabelLabel">
           <thead>
             <tr>
-              <th>Pic</th>
+              <th>Picture URI</th>
               <th>Name</th>
               <th>Price</th>
               <th>Count</th>
             </tr>
           </thead>
           <tbody>
-            {this.state.forecasts.map((forecast) => (
-              <tr key={forecast.id}>
+            {this.state.positions.map((position) => (
+              <tr key={position.id}>
                 <td>
                   <input
-                    value={forecast.picture}
-                    onChange={this.updatePic.bind(this, forecast.id, "pic")}
+                    value={position.picture}
+                    onChange={this.updatePic.bind(this, position.id, "pic")}
                   />
                 </td>
                 <td>
                   <input
-                    value={forecast.name}
-                    onChange={this.updatePic.bind(this, forecast.id, "name")}
+                    value={position.name}
+                    onChange={this.updatePic.bind(this, position.id, "name")}
                   />
                 </td>
                 <td>
                   <input
-                    value={forecast.price}
-                    onChange={this.updatePic.bind(this, forecast.id, "price")}
+                    value={position.price}
+                    onChange={this.updatePic.bind(this, position.id, "price")}
                   />
                 </td>
                 <td>
                   <input
-                    value={forecast.count}
-                    onChange={this.updatePic.bind(this, forecast.id, "count")}
+                    value={position.count}
+                    onChange={this.updatePic.bind(this, position.id, "count")}
                   />
                 </td>
                 <td>
-                  <button onClick={() => this.SavePositions(forecast)}>SavePositions</button>
-                  <button>Remove</button>
+                  <button onClick={() => this.SavePosition(position)}>
+                    SavePosition
+                  </button>
+                  <button onClick={() => this.RemovePosition(position)}>
+                    Remove
+                  </button>
                 </td>
               </tr>
             ))}
@@ -151,40 +157,52 @@ export class AdminPanel extends Component {
         </table>
         <button onClick={() => this.pusher()}>Add item</button>
 
-        <ul>
-          <li>
-            <input
-              type="checkbox"
-              checked={this.state.cash[0]}
-              onChange={this.toggle.bind(this, 0)}
-            />
-            1
-          </li>
-          <li>
-            <input
-              type="checkbox"
-              checked={this.state.cash[1]}
-              onChange={this.toggle.bind(this, 1)}
-            />
-            2
-          </li>
-          <li>
-            <input
-              type="checkbox"
-              checked={this.state.cash[2]}
-              onChange={this.toggle.bind(this, 2)}
-            />
-            5
-          </li>
-          <li>
-            <input
-              type="checkbox"
-              checked={this.state.cash[3]}
-              onChange={this.toggle.bind(this, 3)}
-            />
-            10
-          </li>
-        </ul>
+        <div
+          style={{
+            margin: "15px",
+            border: "solid",
+            width: "100px",
+            height: "215px",
+            padding: "5px",
+          }}
+        >
+          <p>Balance: {this.state.balance}</p>
+          <p>Available coins: </p>
+          <ul>
+            <li>
+              <input
+                type="checkbox"
+                checked={this.state.cash[0]}
+                onChange={this.toggle.bind(this, 0)}
+              />
+              1
+            </li>
+            <li>
+              <input
+                type="checkbox"
+                checked={this.state.cash[1]}
+                onChange={this.toggle.bind(this, 1)}
+              />
+              2
+            </li>
+            <li>
+              <input
+                type="checkbox"
+                checked={this.state.cash[2]}
+                onChange={this.toggle.bind(this, 2)}
+              />
+              5
+            </li>
+            <li>
+              <input
+                type="checkbox"
+                checked={this.state.cash[3]}
+                onChange={this.toggle.bind(this, 3)}
+              />
+              10
+            </li>
+          </ul>
+        </div>
       </div>
     );
 
